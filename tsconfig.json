@@ -1,0 +1,15 @@
+{
+  "compileOnSave": true, 
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": ["es6", "dom"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "ES6",
+    "removeComments": true,
+    "module": "commonjs",
+    // "outDir": "src/content/js",
+  },
+  // "include": ["src/content/ts/**/*"],
+  "exclude": ["node_modules", "build"]
+}
