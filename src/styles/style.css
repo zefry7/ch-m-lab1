@@ -74,4 +74,63 @@ h1, h2, h3, h4, h5, h6 {
 
 p {
   cursor: default;
+}
+
+.header__content {
+  padding: 20px;
+  display: flex;
+  border-bottom: 1px solid black;
+}
+.header__text {
+  font-size: 24px;
+  margin-right: 10px;
+}
+.header__select {
+  border: 1px solid black;
+}
+
+.main__content {
+  padding: 20px;
+}
+.main__text {
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+.main__wrap {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 200px;
+}
+.main__wrap-input {
+  display: flex;
+}
+
+* {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+input {
+  border: 1px solid black;
+}
+
+label {
+  min-width: 30px;
+}
+
+button {
+  width: 150px;
+  height: 40px;
+  border: 1px solid black;
+  border-radius: 5px;
+  transition: all 0.2s linear;
+  background-color: rgb(92, 160, 224);
+}
+button:hover {
+  background-color: rgb(86, 172, 253);
+}
+button:active {
+  transform: translateY(3px);
+  background-color: rgb(66, 116, 163);
 }/*# sourceMappingURL=style.css.map */

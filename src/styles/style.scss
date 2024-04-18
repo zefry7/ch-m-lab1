@@ -1,4 +1,32 @@
 // @import "../public/font/fonts";
 @import "./mixins/null-style";
+@import "../content/Main/main";
 
 
+* {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif ;
+}
+
+input {
+    border: 1px solid black;
+}
+
+label {
+    min-width: 30px;
+}
+
+button {
+    width: 150px;
+    height: 40px;
+    border: 1px solid black;
+    border-radius: 5px;
+    transition: all 0.2s linear;
+    background-color: rgb(92, 160, 224);
+    &:hover {
+        background-color: rgb(86, 172, 253);
+    }
+    &:active {
+        transform: translateY(3px);
+        background-color: rgb(66, 116, 163);
+    }
+}
