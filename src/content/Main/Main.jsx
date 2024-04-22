@@ -1,75 +1,130 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 function Main() {
-    const [sel, setSel] = useState("")
-    const [title, setTitle] = useState("")
-    const [eps, setEps] = useState("")
-    const [a, setA] = useState("")
-    const [b, setB] = useState("")
-    const [result, setResult] = useState(0)
+    const dispath = useDispatch()
+    const eps = useSelector(state => state.eps)
+    const a = useSelector(state => state.a)
+    const b = useSelector(state => state.b)
+    const title = useSelector(state => state.title)
+    const result = useSelector(state => state.result)
 
-    const selectFun = (e) => {
-        setSel(e.target.value)
-        switch (Number(e.target.value)) {
+    const [sel, setSel] = useState("")
+    const [integ, setInteg] = useState(1)
+    const [numFunc, setNumFunc] = useState(1)
+    const count = useRef(0)
+
+    const reset = (name) => {
+        count.current = 0
+        dispath({ type: "set_result", result: {} })
+        dispath({ type: "set_a", a: "" })
+        dispath({ type: "set_b", b: "" })
+        dispath({ type: "set_eps", eps: "" })
+        dispath({ type: "set_title", title: name })
+    }
+
+    const selectMethod = (v) => {
+        switch (v) {
             case 1:
-                setResult(0)
-                setA("")
-                setB("")
-                setEps("")
-                setTitle("Формула средних прямоугольников")
+                reset("Формула средних прямоугольников")
                 break;
             case 2:
-                setResult(0)
-                setA("")
-                setB("")
-                setEps("")
-                setTitle("Формула трапеций")
+                reset("Формула трапеций")
                 break;
             case 3:
-                setResult(0)
-                setA("")
-                setB("")
-                setEps("")
-                setTitle("Формула Симпсона")
+                reset("Формула Симпсона")
                 break;
             default:
                 break;
         }
     }
 
-
-    const fun1 = (n) => {
-        var i1 = 0
-        var i2 = 0
+    const fun = (n) => {
+        var res = 0
         var h = (b - a) / n
         var l = a
         var r = a + h
+        const selectFun = (num) => {
+            switch (numFunc) {
+                case 1:
+                    return Math.sin(num)
+                case 2:
+                    return Math.cos(num)
+                case 3:
+                    return num * num
+                case 4:
+                    return Math.sqrt(num)
+            }
+        }
         for (let i = 0; i < n; ++i) {
-            var f = Math.sin((l + r) / 2.0) * (r - l)
+            var f = 0
+            switch (sel) {
+                case 1:
+                    f = selectFun((l + r) / 2.0) * (r - l)
+                    break;
+                case 2:
+                    f = ((selectFun(l) + selectFun(r)) / 2.0) * (r - l)
+                    break;
+                case 3:
+                    f = ((selectFun(l) + 4 * selectFun((l + r) / 2.0) + selectFun(r)) / 6.0) * (r - l)
+                    break;
+            }
             l += h
             r += h
-            i1 += f
+            res += f
+        }
+        return res
+    }
+
+    const start = (n) => {
+        if (a >= b) {
+            alert("Значение а больше или равно b")
+            reset(title)
+            return
         }
 
-        h = (b - a) / (2 * n)
-        l = a
-        r = a + h
-        for (let i = 0; i < 2 * n; ++i) {
-            var f = Math.sin((l + r) / 2.0) * (r - l)
-            l += h
-            r += h
-            i2 += f
+        count.current = 0
+        dispath({ type: "set_result", result: {} })
+
+        if (integ == 1) {
+            opred(n)
+        } else {
+            nesobst(n)
         }
+    }
 
-        var res = Math.abs(i2 - i1) / 3.0
+    const opred = (n) => {
+        var i1 = fun(n)
+        var i2 = fun(2 * n)
+        var s = sel == 3 ? 15.0 : 7.0
+        var res = Math.abs(i2 - i1) / s
 
-        console.log(i2 + " " + i1 + " " + n)
+        count.current++;
 
         console.log(res)
-        if (res > eps) {
-            fun1(2 * n)
+
+        if (res > eps && count.current < 20) {
+            opred(2 * n)
+        } else if (count.current < 20) {
+            dispath({ type: "set_result", result: { result: i2, n: (2 * n) } })
         } else {
-            setResult(i2)
+            dispath({ type: "set_result", result: { result: "Ошибка" } })
+        }
+    }
+
+    const nesobst = (n) => {
+        var i1 = fun(n)
+        var i2 = fun(2 * n)
+        var res = Math.abs(i2 - i1)
+
+        count.current++;
+
+        if (res > eps && count.current < 20) {
+            nesobst(2 * n)
+        } else if (count.current < 20) {
+            dispath({ type: "set_result", result: { result: i2, n: 2 * n } })
+        } else {
+            dispath({ type: "set_result", result: { result: "Интеграл расходится" } })
         }
     }
 
@@ -78,11 +133,22 @@ function Main() {
             <header className="header">
                 <div className="header__content">
                     <p className="header__text">Квадратная формула: </p>
-                    <select name="" id="" className="header__select" onChange={selectFun}>
+                    <select name="" id="" className="header__select" onChange={(e) => {
+                        setSel(Number(e.target.value))
+                        selectMethod(Number(e.target.value))
+                    }}>
                         <option value="" disabled selected>Выбрать вариант</option>
                         <option value="1">Формула средних прямоугольников</option>
                         <option value="2">Формула трапеций</option>
                         <option value="3">Формула Симпсона</option>
+                    </select>
+                    <p className="header__text">для </p>
+                    <select name="" id="" className="header__select" onChange={(e) => {
+                        setInteg(Number(e.target.value))
+                        selectMethod(sel)
+                    }}>
+                        <option value="1">определенного интеграла</option>
+                        <option value="2"> несобственного интеграла</option>
                     </select>
                 </div>
             </header>
@@ -92,41 +158,83 @@ function Main() {
                         <h1 className="main__text">
                             {title}
                         </h1>
+                        <div className="main__func">
+                            <div className="main__item">
+                                <input type="radio" name="func" className="main__item-input" defaultChecked value={1} onChange={(e) => {
+                                    setNumFunc(Number(e.target.value))
+                                    count.current = 0
+                                }} />
+                                <p className="main__item-text">sin x</p>
+                            </div>
+                            <div className="main__item">
+                                <input type="radio" name="func" className="main__item-input" value={2} onChange={(e) => {
+                                    setNumFunc(Number(e.target.value))
+                                    count.current = 0
+                                }} />
+                                <p className="main__item-text">cos x</p>
+                            </div>
+                            <div className="main__item">
+                                <input type="radio" name="func" className="main__item-input" value={3} onChange={(e) => {
+                                    setNumFunc(Number(e.target.value))
+                                    count.current = 0
+                                }} />
+                                <p className="main__item-text">x<sup>2</sup></p>
+                            </div>
+                            <div className="main__item">
+                                <input type="radio" name="func" className="main__item-input" value={4} onChange={(e) => {
+                                    setNumFunc(Number(e.target.value))
+                                    count.current = 0
+                                }} />
+                                <p className="main__item-text">&#8730;x</p>
+                            </div>
+                        </div>
                         <div className="main__wrap">
                             <div className="main__wrap-input">
                                 <label htmlFor="eps">ε = </label>
                                 <input type="text" className="main__eps" name="eps" required value={eps} onChange={(e) => {
-                                    if(e.target.value.match(/^\d*(\.\d*)?$/)) 
-                                        setEps(e.target.value)
+                                    if (e.target.value.match(/^\d*(\.\d*)?$/))
+                                        dispath({ type: "set_eps", eps: e.target.value })
+                                    else
+                                        e.target.value = ""
+                                    count.current = 0
                                 }} />
                             </div>
                             <div className="main__wrap-input">
                                 <label htmlFor="a">a = </label>
-                                <input type="text" className="main__eps" name="a" required  value={a} onChange={(e) => {
-                                    if (e.target.value.match(/^\d*$/)) 
-                                        setA(Number(e.target.value))
+                                <input type="text" className="main__eps" name="a" required value={a} onChange={(e) => {
+                                    if (e.target.value.match(/^\d*$/))
+                                        dispath({ type: "set_a", a: Number(e.target.value) })
+                                    count.current = 0
                                 }} />
                             </div>
                             <div className="main__wrap-input">
-                                <label htmlFor="b">b = </label>
-                                <input type="text" className="main__eps" name="b" required  value={b} onChange={(e) => {
-                                    if (Number(e.target.value) !== NaN) {
-                                        setB(Number(e.target.value))
-                                    } else {
-                                        setB("")
-                                    }
+                                <label htmlFor="b">{integ == 1 ? "b" : "B"} = </label>
+                                <input type="text" className="main__eps" name="b" required value={b} onChange={(e) => {
+                                    if (e.target.value.match(/^\d*$/))
+                                        dispath({ type: "set_b", b: Number(e.target.value) })
+                                    count.current = 0
                                 }} />
                             </div>
-                            <button className="main__start" onClick={() => { fun1(1) }}>Получить ответ</button>
+                            <button className="main__start" onClick={() => { start(1) }}>Получить ответ</button>
                         </div>
-                        <h1 className="main__text">
-                            {result != 0 &&
-                                "Приблизительное значение = " + result
-                            }
-                        </h1>
+                        {result.result && result.result != "Ошибка" && result.result != "Интеграл расходится" &&
+                            <>
+                                <h2 className="main__text">
+                                    {"Значение: " + result.result}
+                                </h2>
+                                <h2 className="main__text">
+                                    {"n = " + result.n}
+                                </h2>
+                            </>
+                        }
+                        {(result.result == "Ошибка" || result.result == "Интеграл расходится") &&
+                            <h2 className="main__text">
+                                {result.result}
+                            </h2>
+                        }
                     </div>
                 }
-            </main>
+            </main >
         </>)
 }
 
