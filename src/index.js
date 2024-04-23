@@ -20,7 +20,7 @@ const init = {
   b: "",
   eps: "",
   title: "",
-  result: {}
+  result: { result: ""}
 }
 
 const reducer = (state = init, action) => {

@@ -16,7 +16,7 @@ function Main() {
 
     const reset = (name) => {
         count.current = 0
-        dispath({ type: "set_result", result: {} })
+        dispath({ type: "set_result", result: {result: ""} })
         dispath({ type: "set_a", a: "" })
         dispath({ type: "set_b", b: "" })
         dispath({ type: "set_eps", eps: "" })
@@ -77,7 +77,10 @@ function Main() {
     }
 
     const start = (n) => {
-        if (a >= b) {
+        if (a === "" || b === "" || eps === "") {
+            alert("Не все значения определены")
+            return
+        } else if (a >= b) {
             alert("Значение а больше или равно b")
             reset(title)
             return
@@ -96,12 +99,10 @@ function Main() {
     const opred = (n) => {
         var i1 = fun(n)
         var i2 = fun(2 * n)
-        var s = sel == 3 ? 15.0 : 7.0
+        var s = sel === 3 ? 15.0 : 7.0
         var res = Math.abs(i2 - i1) / s
 
         count.current++;
-
-        console.log(res)
 
         if (res > eps && count.current < 20) {
             opred(2 * n)
@@ -202,34 +203,48 @@ function Main() {
                             <div className="main__wrap-input">
                                 <label htmlFor="a">a = </label>
                                 <input type="text" className="main__eps" name="a" required value={a} onChange={(e) => {
-                                    if (e.target.value.match(/^\d*$/))
-                                        dispath({ type: "set_a", a: Number(e.target.value) })
+                                    if (e.target.value != "-") {
+                                        if (e.target.value.match(/^-?\d*$/) && a !== 0) {
+                                            dispath({ type: "set_a", a: Number(e.target.value) })
+                                        } else if (a === 0) {
+                                            dispath({ type: "set_a", a: "" })
+                                        }
+                                    } else {
+                                        dispath({ type: "set_a", a: e.target.value })
+                                    }
                                     count.current = 0
                                 }} />
                             </div>
                             <div className="main__wrap-input">
                                 <label htmlFor="b">{integ == 1 ? "b" : "B"} = </label>
                                 <input type="text" className="main__eps" name="b" required value={b} onChange={(e) => {
-                                    if (e.target.value.match(/^\d*$/))
-                                        dispath({ type: "set_b", b: Number(e.target.value) })
+                                    if (e.target.value != "-") {
+                                        if (e.target.value.match(/^-?\d*$/) && b !== 0) {
+                                            dispath({ type: "set_b", b: Number(e.target.value) })
+                                        } else {
+                                            dispath({ type: "set_b", b: "" })
+                                        }
+                                    } else {
+                                        dispath({ type: "set_b", b: e.target.value })
+                                    }
                                     count.current = 0
                                 }} />
                             </div>
                             <button className="main__start" onClick={() => { start(1) }}>Получить ответ</button>
                         </div>
-                        {result.result && result.result != "Ошибка" && result.result != "Интеграл расходится" &&
+                        {(result.result != ""  && result.result != "Ошибка" && result.result != "Интеграл расходится") &&
                             <>
                                 <h2 className="main__text">
-                                    {"Значение: " + result.result}
+                                    {"Значение: " + result?.result}
                                 </h2>
                                 <h2 className="main__text">
-                                    {"n = " + result.n}
+                                    {"n = " + result?.n}
                                 </h2>
                             </>
                         }
                         {(result.result == "Ошибка" || result.result == "Интеграл расходится") &&
                             <h2 className="main__text">
-                                {result.result}
+                                {result?.result}
                             </h2>
                         }
                     </div>
