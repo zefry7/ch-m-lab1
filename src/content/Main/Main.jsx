@@ -9,6 +9,8 @@ function Main() {
     const title = useSelector(state => state.title)
     const result = useSelector(state => state.result)
 
+    var A, B = 0
+
     const [sel, setSel] = useState("")
     const [integ, setInteg] = useState(1)
     const [numFunc, setNumFunc] = useState(1)
@@ -16,7 +18,7 @@ function Main() {
 
     const reset = (name) => {
         count.current = 0
-        dispath({ type: "set_result", result: {result: ""} })
+        dispath({ type: "set_result", result: { result: "" } })
         dispath({ type: "set_a", a: "" })
         dispath({ type: "set_b", b: "" })
         dispath({ type: "set_eps", eps: "" })
@@ -39,11 +41,11 @@ function Main() {
         }
     }
 
-    const fun = (n) => {
+    const funOpred = (n) => {
         var res = 0
-        var h = (b - a) / n
-        var l = a
-        var r = a + h
+        var h = (B - A) / n
+        var l = A
+        var r = A + h
         const selectFun = (num) => {
             switch (numFunc) {
                 case 1:
@@ -54,6 +56,8 @@ function Main() {
                     return num * num
                 case 4:
                     return Math.sqrt(num)
+                case 5:
+                    return (1/num)
             }
         }
         for (let i = 0; i < n; ++i) {
@@ -77,14 +81,25 @@ function Main() {
     }
 
     const start = (n) => {
-        if (a === "" || b === "" || eps === "") {
+        console.log(typeof(a))
+        A = parseFloat(a)
+        B = parseFloat(b)
+        if (A === "" || B === "" || eps === "") {
             alert("Не все значения определены")
             return
-        } else if (a >= b) {
+        } else if (A >= B) {
             alert("Значение а больше или равно b")
-            reset(title)
             return
-        }
+        } else if(A == 0 && (sel == 3 || sel == 2) && numFunc == 5) {
+            alert("Значение а не может быть нулём")
+            return
+        }  else if(B == 0 && (sel == 3 || sel == 2) && numFunc == 5) {
+            alert("Значение b не может быть нулём")
+            return
+        }  else if(!(A >= 0 && B >= 0) && numFunc == 4) {
+            alert("Значения не могут быть отрицательными")
+            return
+        } 
 
         count.current = 0
         dispath({ type: "set_result", result: {} })
@@ -92,13 +107,13 @@ function Main() {
         if (integ == 1) {
             opred(n)
         } else {
-            nesobst(n)
+            nesobst(B)
         }
     }
 
     const opred = (n) => {
-        var i1 = fun(n)
-        var i2 = fun(2 * n)
+        var i1 = funOpred(n)
+        var i2 = funOpred(2 * n)
         var s = sel === 3 ? 15.0 : 7.0
         var res = Math.abs(i2 - i1) / s
 
@@ -113,17 +128,51 @@ function Main() {
         }
     }
 
-    const nesobst = (n) => {
-        var i1 = fun(n)
-        var i2 = fun(2 * n)
+    const funNesobst = (b) => {
+        var r = b
+        var l = A
+        const selectFun = (num) => {
+            switch (numFunc) {
+                case 1:
+                    return Math.sin(num)
+                case 2:
+                    return Math.cos(num)
+                case 3:
+                    return num * num
+                case 4:
+                    return Math.sqrt(num)
+                case 5:
+                    return (1.0/parseFloat(num))
+            }
+        }
+
+        var f = 0
+        switch (sel) {
+            case 1:
+                f = selectFun((l + r) / 2.0) * (r - l)
+                break;
+            case 2:
+                f = ((selectFun(l) + selectFun(r)) / 2.0) * (r - l)
+                break;
+            case 3:
+                f = ((selectFun(l) + 4 * selectFun((l + r) / 2.0) + selectFun(r)) / 6.0) * (r - l)
+                break;
+        }
+
+        return f
+    }
+
+    const nesobst = (b) => {
+        var i1 = funNesobst(b)
+        var i2 = funNesobst(2 * b)
         var res = Math.abs(i2 - i1)
 
         count.current++;
 
         if (res > eps && count.current < 20) {
-            nesobst(2 * n)
+            nesobst(2 * b)
         } else if (count.current < 20) {
-            dispath({ type: "set_result", result: { result: i2, n: 2 * n } })
+            dispath({ type: "set_result", result: { result: i2, n: 2 * b } })
         } else {
             dispath({ type: "set_result", result: { result: "Интеграл расходится" } })
         }
@@ -188,6 +237,13 @@ function Main() {
                                 }} />
                                 <p className="main__item-text">&#8730;x</p>
                             </div>
+                            <div className="main__item">
+                                <input type="radio" name="func" className="main__item-input" value={5} onChange={(e) => {
+                                    setNumFunc(Number(e.target.value))
+                                    count.current = 0
+                                }} />
+                                <p className="main__item-text">1/x</p>
+                            </div>
                         </div>
                         <div className="main__wrap">
                             <div className="main__wrap-input">
@@ -204,8 +260,8 @@ function Main() {
                                 <label htmlFor="a">a = </label>
                                 <input type="text" className="main__eps" name="a" required value={a} onChange={(e) => {
                                     if (e.target.value != "-") {
-                                        if (e.target.value.match(/^-?\d*$/) && a !== 0) {
-                                            dispath({ type: "set_a", a: Number(e.target.value) })
+                                        if (e.target.value.match(/^-?\d*(\.\d*)?$/) && a !== 0) {
+                                            dispath({ type: "set_a", a: e.target.value })
                                         } else if (a === 0) {
                                             dispath({ type: "set_a", a: "" })
                                         }
@@ -219,8 +275,8 @@ function Main() {
                                 <label htmlFor="b">{integ == 1 ? "b" : "B"} = </label>
                                 <input type="text" className="main__eps" name="b" required value={b} onChange={(e) => {
                                     if (e.target.value != "-") {
-                                        if (e.target.value.match(/^-?\d*$/) && b !== 0) {
-                                            dispath({ type: "set_b", b: Number(e.target.value) })
+                                        if (e.target.value.match(/^-?\d*(\.\d*)?$/) && b !== 0) {
+                                            dispath({ type: "set_b", b: e.target.value })
                                         } else {
                                             dispath({ type: "set_b", b: "" })
                                         }
@@ -230,15 +286,23 @@ function Main() {
                                     count.current = 0
                                 }} />
                             </div>
-                            <button className="main__start" onClick={() => { start(1) }}>Получить ответ</button>
+                            <button className="main__start" onClick={() => { 
+                                dispath({ type: "set_a", a: parseFloat(a) })
+                                start(1) 
+                            }}>Получить ответ</button>
                         </div>
-                        {(result.result != ""  && result.result != "Ошибка" && result.result != "Интеграл расходится") &&
+                        {(result.result != "" && result.result != "Ошибка" && result.result != "Интеграл расходится") &&
                             <>
                                 <h2 className="main__text">
                                     {"Значение: " + result?.result}
                                 </h2>
                                 <h2 className="main__text">
-                                    {"n = " + result?.n}
+                                    {integ == 1 && 
+                                        "n = " + result?.n
+                                    }
+                                    {integ == 2 && 
+                                        "B = " + result?.n
+                                    }
                                 </h2>
                             </>
                         }
