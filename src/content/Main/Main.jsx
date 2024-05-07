@@ -18,7 +18,7 @@ function Main() {
 
     const reset = (name) => {
         count.current = 0
-        dispath({ type: "set_result", result: { result: "" } })
+        dispath({ type: "set_result", result: { result: "%" } })
         dispath({ type: "set_a", a: "" })
         dispath({ type: "set_b", b: "" })
         dispath({ type: "set_eps", eps: "" })
@@ -57,7 +57,7 @@ function Main() {
                 case 4:
                     return Math.sqrt(num)
                 case 5:
-                    return (1/num)
+                    return (1.0/num)
             }
         }
         for (let i = 0; i < n; ++i) {
@@ -122,6 +122,7 @@ function Main() {
         if (res > eps && count.current < 20) {
             opred(2 * n)
         } else if (count.current < 20) {
+            console.log(i2, 2 * n);
             dispath({ type: "set_result", result: { result: i2, n: (2 * n) } })
         } else {
             dispath({ type: "set_result", result: { result: "Ошибка" } })
@@ -291,7 +292,7 @@ function Main() {
                                 start(1) 
                             }}>Получить ответ</button>
                         </div>
-                        {(result.result != "" && result.result != "Ошибка" && result.result != "Интеграл расходится") &&
+                        {(result.result != "%" && result.result != "Ошибка" && result.result != "Интеграл расходится") &&
                             <>
                                 <h2 className="main__text">
                                     {"Значение: " + result?.result}
