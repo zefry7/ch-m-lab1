@@ -15,9 +15,11 @@ function Main() {
     const [integ, setInteg] = useState(1)
     const [numFunc, setNumFunc] = useState(1)
     const count = useRef(0)
+    const countNesob = useRef(0)
 
     const reset = (name) => {
         count.current = 0
+        countNesob.current = 0
         dispath({ type: "set_result", result: { result: "%" } })
         dispath({ type: "set_a", a: "" })
         dispath({ type: "set_b", b: "" })
@@ -41,25 +43,58 @@ function Main() {
         }
     }
 
+    const selectFun = (num) => {
+        switch (numFunc) {
+            case 1:
+                return Math.sin(num)
+            case 2:
+                return Math.cos(num)
+            case 3:
+                return num * num
+            case 4:
+                return Math.sqrt(num)
+            case 5:
+                return (1.0 / parseFloat(num * num))
+        }
+    }
+
+    const start = (n) => {
+        A = parseFloat(a)
+        B = parseFloat(b)
+        if (A === "" || B === "" || eps === "") {
+            alert("Не все значения определены")
+            return
+        } else if (A >= B) {
+            alert("Значение а больше или равно b")
+            return
+        } else if (A == 0 && numFunc == 5) {
+            alert("Значение а не может быть нулём")
+            return
+        } else if (B == 0 && (sel == 3 || sel == 2) && numFunc == 5) {
+            alert("Значение b не может быть нулём")
+            return
+        } else if (!(A >= 0 && B >= 0) && numFunc == 4) {
+            alert("Значения не могут быть отрицательными")
+            return
+        }
+
+        count.current = 0
+        countNesob.current = 0
+        dispath({ type: "set_result", result: {} })
+
+        if (integ == 1) {
+            opred(n)
+        } else {
+            nesobst(B, 1)
+        }
+    }
+
     const funOpred = (n) => {
         var res = 0
         var h = (B - A) / n
         var l = A
         var r = A + h
-        const selectFun = (num) => {
-            switch (numFunc) {
-                case 1:
-                    return Math.sin(num)
-                case 2:
-                    return Math.cos(num)
-                case 3:
-                    return num * num
-                case 4:
-                    return Math.sqrt(num)
-                case 5:
-                    return (1.0/num)
-            }
-        }
+
         for (let i = 0; i < n; ++i) {
             var f = 0
             switch (sel) {
@@ -80,37 +115,6 @@ function Main() {
         return res
     }
 
-    const start = (n) => {
-        console.log(typeof(a))
-        A = parseFloat(a)
-        B = parseFloat(b)
-        if (A === "" || B === "" || eps === "") {
-            alert("Не все значения определены")
-            return
-        } else if (A >= B) {
-            alert("Значение а больше или равно b")
-            return
-        } else if(A == 0 && (sel == 3 || sel == 2) && numFunc == 5) {
-            alert("Значение а не может быть нулём")
-            return
-        }  else if(B == 0 && (sel == 3 || sel == 2) && numFunc == 5) {
-            alert("Значение b не может быть нулём")
-            return
-        }  else if(!(A >= 0 && B >= 0) && numFunc == 4) {
-            alert("Значения не могут быть отрицательными")
-            return
-        } 
-
-        count.current = 0
-        dispath({ type: "set_result", result: {} })
-
-        if (integ == 1) {
-            opred(n)
-        } else {
-            nesobst(B)
-        }
-    }
-
     const opred = (n) => {
         var i1 = funOpred(n)
         var i2 = funOpred(2 * n)
@@ -129,53 +133,57 @@ function Main() {
         }
     }
 
-    const funNesobst = (b) => {
-        var r = b
+    const funNesobst = (b, n) => {
+        var res = 0
+        var h = (b - A) / n
         var l = A
-        const selectFun = (num) => {
-            switch (numFunc) {
+        var r = A + h
+
+        for (let i = 0; i < n; ++i) {
+            var f = 0
+            switch (sel) {
                 case 1:
-                    return Math.sin(num)
+                    f = selectFun((l + r) / 2.0) * (r - l)
+                    break;
                 case 2:
-                    return Math.cos(num)
+                    f = ((selectFun(l) + selectFun(r)) / 2.0) * (r - l)
+                    break;
                 case 3:
-                    return num * num
-                case 4:
-                    return Math.sqrt(num)
-                case 5:
-                    return (1.0/parseFloat(num))
+                    f = ((selectFun(l) + 4 * selectFun((l + r) / 2.0) + selectFun(r)) / 6.0) * (r - l)
+                    break;
             }
+            l += h
+            r += h
+            res += f
         }
 
-        var f = 0
-        switch (sel) {
-            case 1:
-                f = selectFun((l + r) / 2.0) * (r - l)
-                break;
-            case 2:
-                f = ((selectFun(l) + selectFun(r)) / 2.0) * (r - l)
-                break;
-            case 3:
-                f = ((selectFun(l) + 4 * selectFun((l + r) / 2.0) + selectFun(r)) / 6.0) * (r - l)
-                break;
-        }
-
-        return f
+        return res
     }
 
-    const nesobst = (b) => {
-        var i1 = funNesobst(b)
-        var i2 = funNesobst(2 * b)
+    const nesobst = (b, n) => {
+        var i1 = funNesobst(b, n)
+        var i2 = funNesobst(2 * b, n)
         var res = Math.abs(i2 - i1)
-
-        count.current++;
-
-        if (res > eps && count.current < 20) {
-            nesobst(2 * b)
-        } else if (count.current < 20) {
-            dispath({ type: "set_result", result: { result: i2, n: 2 * b } })
+        if (countNesob.current < 20) {
+            countNesob.current++;
+            if (res > eps) {
+                nesobst(b, 2 * n)
+            } else {
+                dispath({ type: "set_result", result: { result: i2, n: 2 * b } })
+            }
         } else {
-            dispath({ type: "set_result", result: { result: "Интеграл расходится" } })
+            count.current++;
+
+            if (res > eps && count.current < 20) {
+                countNesob.current = 0
+                nesobst(2 * b, 1)
+            } else if (count.current < 20) {
+                countNesob.current = 0
+                dispath({ type: "set_result", result: { result: i2, n: 2 * b } })
+            } else {
+                countNesob.current = 0
+                dispath({ type: "set_result", result: { result: "Интеграл расходится" } })
+            }
         }
     }
 
@@ -243,7 +251,7 @@ function Main() {
                                     setNumFunc(Number(e.target.value))
                                     count.current = 0
                                 }} />
-                                <p className="main__item-text">1/x</p>
+                                <p className="main__item-text">1/x<sup>2</sup></p>
                             </div>
                         </div>
                         <div className="main__wrap">
@@ -287,9 +295,9 @@ function Main() {
                                     count.current = 0
                                 }} />
                             </div>
-                            <button className="main__start" onClick={() => { 
+                            <button className="main__start" onClick={() => {
                                 dispath({ type: "set_a", a: parseFloat(a) })
-                                start(1) 
+                                start(1)
                             }}>Получить ответ</button>
                         </div>
                         {(result.result != "%" && result.result != "Ошибка" && result.result != "Интеграл расходится") &&
@@ -298,10 +306,10 @@ function Main() {
                                     {"Значение: " + result?.result}
                                 </h2>
                                 <h2 className="main__text">
-                                    {integ == 1 && 
+                                    {integ == 1 &&
                                         "n = " + result?.n
                                     }
-                                    {integ == 2 && 
+                                    {integ == 2 &&
                                         "B = " + result?.n
                                     }
                                 </h2>
